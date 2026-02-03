@@ -5,6 +5,8 @@
  * The actual library will be loaded from CDN and inlined during build.
  */
 
+import { logger } from '../utils/index.js';
+
 /**
  * Point in QR code
  */
@@ -92,7 +94,7 @@ export function getJSQR(): JSQRFunction | null {
 export function scanQRCode(imageData: ImageData): QRCodeResult | null {
   const jsQR = getJSQR();
   if (!jsQR) {
-    console.error('jsQR library not loaded');
+    logger.error('jsQR library not loaded');
     return null;
   }
 
@@ -101,7 +103,7 @@ export function scanQRCode(imageData: ImageData): QRCodeResult | null {
       inversionAttempts: 'dontInvert',
     });
   } catch (error) {
-    console.error('Failed to scan QR code:', error);
+    logger.error('Failed to scan QR code:', error);
     return null;
   }
 }

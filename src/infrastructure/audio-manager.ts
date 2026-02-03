@@ -260,7 +260,7 @@ export class AudioReceiver {
     }
 
     // Update frequency data
-    this.analyser.getFloatFrequencyData(this.frequencyData);
+    this.analyser.getFloatFrequencyData(this.frequencyData as Float32Array<ArrayBuffer>);
 
     const sampleRate = this.context.sampleRate;
     const centerBin = Math.round((frequency * this.config.fftSize) / sampleRate);
@@ -285,7 +285,7 @@ export class AudioReceiver {
     }
 
     // Update frequency data
-    this.analyser.getFloatFrequencyData(this.frequencyData);
+    this.analyser.getFloatFrequencyData(this.frequencyData as Float32Array<ArrayBuffer>);
 
     const sampleRate = this.context.sampleRate;
 
@@ -304,7 +304,7 @@ export class AudioReceiver {
       return null;
     }
 
-    this.analyser.getFloatFrequencyData(this.frequencyData);
+    this.analyser.getFloatFrequencyData(this.frequencyData as Float32Array<ArrayBuffer>);
     return this.frequencyData;
   }
 

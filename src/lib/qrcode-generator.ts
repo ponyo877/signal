@@ -5,6 +5,8 @@
  * The actual library will be loaded from CDN and inlined during build.
  */
 
+import { logger } from '../utils/index.js';
+
 /**
  * QR Code instance interface
  */
@@ -58,7 +60,7 @@ export function generateQRCode(
 ): QRCode | null {
   const factory = getQRCodeFactory();
   if (!factory) {
-    console.error('qrcode-generator library not loaded');
+    logger.error('qrcode-generator library not loaded');
     return null;
   }
 
@@ -69,7 +71,7 @@ export function generateQRCode(
     qr.make();
     return qr;
   } catch (error) {
-    console.error('Failed to generate QR code:', error);
+    logger.error('Failed to generate QR code:', error);
     return null;
   }
 }

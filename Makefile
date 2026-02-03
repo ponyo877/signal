@@ -10,7 +10,7 @@ install:
 build: install
 	npx tsc --noEmit
 	npx esbuild src/main.ts --bundle --outfile=build/bundle.js --target=es2020 --format=iife
-	node scripts/build.js
+	npx tsx scripts/build.ts
 
 # Clean build artifacts
 clean:
@@ -26,5 +26,4 @@ update-libs:
 
 # Development server with hot reload
 dev: install
-	mkdir -p dev
-	npx esbuild src/main.ts --bundle --outfile=dev/bundle.js --servedir=dev --watch
+	npx tsx scripts/dev.ts

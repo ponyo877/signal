@@ -8,6 +8,7 @@ import { getStore } from './application/store.js';
 import { getMessageService } from './application/message-service.js';
 import { createAppRenderer } from './ui/renderer.js';
 import { JSQR_CDN_URL, QRCODE_CDN_URL } from './lib/index.js';
+import { logger } from './utils/index.js';
 
 /**
  * Load external library script
@@ -38,9 +39,9 @@ async function loadExternalLibraries(): Promise<void> {
       loadScript(QRCODE_CDN_URL),
       loadScript(JSQR_CDN_URL),
     ]);
-    console.log('External libraries loaded successfully');
+    logger.debug('External libraries loaded successfully');
   } catch (error) {
-    console.warn('Failed to load some external libraries:', error);
+    logger.warn('Failed to load some external libraries:', error);
     // Continue anyway - QR features will be unavailable
   }
 }
@@ -79,7 +80,7 @@ async function initApp(): Promise<void> {
     };
   }
 
-  console.log('Signal app initialized');
+  logger.info('Signal app initialized');
 }
 
 /**
@@ -88,10 +89,10 @@ async function initApp(): Promise<void> {
 function main(): void {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-      initApp().catch(console.error);
+      initApp().catch((error) => logger.error('Failed to initialize app:', error));
     });
   } else {
-    initApp().catch(console.error);
+    initApp().catch((error) => logger.error('Failed to initialize app:', error));
   }
 }
 

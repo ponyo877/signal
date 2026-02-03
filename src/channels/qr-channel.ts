@@ -20,6 +20,7 @@ import {
   VideoAnalyzer,
 } from '../infrastructure/video-manager.js';
 import { SignalOverlay } from '../infrastructure/canvas-manager.js';
+import { logger } from '../utils/index.js';
 
 // QR library types (will be loaded dynamically)
 declare function qrcode(typeNumber: number, errorCorrection: string): {
@@ -273,7 +274,7 @@ export class QRChannel extends VisualChannelBase {
   private generateQR(message: string): ReturnType<typeof qrcode> | null {
     // Check if qrcode library is available
     if (typeof qrcode !== 'function') {
-      console.error('qrcode-generator library not loaded');
+      logger.error('qrcode-generator library not loaded');
       return null;
     }
 
@@ -284,7 +285,7 @@ export class QRChannel extends VisualChannelBase {
       qr.make();
       return qr;
     } catch (error) {
-      console.error('QR generation error:', error);
+      logger.error('QR generation error:', error);
       return null;
     }
   }
@@ -295,7 +296,7 @@ export class QRChannel extends VisualChannelBase {
   private scanQR(imageData: ImageData): string | null {
     // Check if jsQR library is available
     if (typeof jsQR !== 'function') {
-      console.error('jsQR library not loaded');
+      logger.error('jsQR library not loaded');
       return null;
     }
 
@@ -305,7 +306,7 @@ export class QRChannel extends VisualChannelBase {
       });
       return result?.data ?? null;
     } catch (error) {
-      console.error('QR scan error:', error);
+      logger.error('QR scan error:', error);
       return null;
     }
   }

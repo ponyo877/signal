@@ -258,7 +258,13 @@ export class ManualBitReceiver {
    */
   setState(state: ReceiverState): void {
     this.state = state;
-    this.callbacks.onStatusChange({ state });
+    // Map 'bits' state to 'receiving' for ReceiverStatus
+    const statusState = state === 'bits' ? 'receiving' as const : state;
+    if (statusState === 'receiving') {
+      this.callbacks.onStatusChange({ state: statusState, progress: 0 });
+    } else {
+      this.callbacks.onStatusChange({ state: statusState });
+    }
   }
 
   /**
