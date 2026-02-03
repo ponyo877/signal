@@ -1,0 +1,28 @@
+{
+  "name": "signal",
+  "version": "1.0.0",
+  "description": "Physical signal communication app - Send messages using sound and light",
+  "type": "module",
+  "scripts": {
+    "build": "make build",
+    "dev": "make dev",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "make clean"
+  },
+  "keywords": [
+    "offline",
+    "communication",
+    "ultrasonic",
+    "fsk",
+    "qr-code",
+    "physical-layer"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "esbuild": "^0.20.0",
+    "vitest": "^1.2.0"
+  }
+}
