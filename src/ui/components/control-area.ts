@@ -5,6 +5,7 @@
  */
 
 import type { TransceiverState } from '../../types/index.js';
+import { getIcon } from '../icons.js';
 
 export interface ControlAreaCallbacks {
   onSend: (message: string) => void;
@@ -47,12 +48,12 @@ export class ControlArea {
     this.sendButton = document.createElement('button');
     this.sendButton.type = 'button';
     this.sendButton.className = 'signal-btn signal-btn--primary';
-    this.sendButton.innerHTML = '<span>📤</span><span>送信</span>';
+    this.sendButton.innerHTML = `<span class="signal-btn__icon">${getIcon('send')}</span><span>送信</span>`;
 
     this.receiveButton = document.createElement('button');
     this.receiveButton.type = 'button';
     this.receiveButton.className = 'signal-btn signal-btn--secondary';
-    this.receiveButton.innerHTML = '<span>📥</span><span>受信</span>';
+    this.receiveButton.innerHTML = `<span class="signal-btn__icon">${getIcon('receive')}</span><span>受信</span>`;
 
     buttonRow.appendChild(this.sendButton);
     buttonRow.appendChild(this.receiveButton);
@@ -96,18 +97,18 @@ export class ControlArea {
     // Update send button
     this.sendButton.disabled = transceiverState === 'sending';
     if (transceiverState === 'sending') {
-      this.sendButton.innerHTML = '<span>⏳</span><span>送信中...</span>';
+      this.sendButton.innerHTML = `<span class="signal-btn__icon">${getIcon('loading')}</span><span>送信中...</span>`;
     } else {
-      this.sendButton.innerHTML = '<span>📤</span><span>送信</span>';
+      this.sendButton.innerHTML = `<span class="signal-btn__icon">${getIcon('send')}</span><span>送信</span>`;
     }
 
     // Update receive button
     if (transceiverState === 'receiving') {
       this.receiveButton.classList.add('signal-btn--active');
-      this.receiveButton.innerHTML = '<span>⏹</span><span>停止</span>';
+      this.receiveButton.innerHTML = `<span class="signal-btn__icon">${getIcon('stop')}</span><span>停止</span>`;
     } else {
       this.receiveButton.classList.remove('signal-btn--active');
-      this.receiveButton.innerHTML = '<span>📥</span><span>受信</span>';
+      this.receiveButton.innerHTML = `<span class="signal-btn__icon">${getIcon('receive')}</span><span>受信</span>`;
     }
 
     // Disable receive button while sending

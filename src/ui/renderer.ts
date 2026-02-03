@@ -8,9 +8,9 @@ import type { AppState, ChannelId } from '../types/index.js';
 import { Store } from '../application/store.js';
 import { MessageService } from '../application/message-service.js';
 import { injectStyles } from './styles.js';
+import { logger } from '../utils/index.js';
 import {
   createHeader,
-  createHero,
   createChannelCards,
   updateActiveChannel,
   createSignalPanel,
@@ -57,7 +57,6 @@ export class AppRenderer {
 
     // Create components
     const header = createHeader();
-    const hero = createHero();
 
     this.channelCardsContainer = createChannelCards(
       this.store.getState().currentChannel,
@@ -75,7 +74,6 @@ export class AppRenderer {
 
     // Append to container
     this.container.appendChild(header);
-    this.container.appendChild(hero);
     this.container.appendChild(this.channelCardsContainer);
     this.container.appendChild(this.signalPanel.getElement());
     this.container.appendChild(this.messagesArea.getElement());
@@ -130,7 +128,7 @@ export class AppRenderer {
     try {
       await this.messageService.switchChannel(channel);
     } catch (error) {
-      console.error('Failed to switch channel:', error);
+      logger.error('Failed to switch channel:', error);
     }
   }
 
@@ -141,7 +139,7 @@ export class AppRenderer {
     try {
       await this.messageService.send(message);
     } catch (error) {
-      console.error('Failed to send message:', error);
+      logger.error('Failed to send message:', error);
     }
   }
 
@@ -152,7 +150,7 @@ export class AppRenderer {
     try {
       await this.messageService.toggleReceive();
     } catch (error) {
-      console.error('Failed to toggle receive:', error);
+      logger.error('Failed to toggle receive:', error);
     }
   }
 

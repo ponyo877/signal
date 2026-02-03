@@ -6,6 +6,7 @@
 
 import type { ChannelId, ChannelConfig } from '../../types/index.js';
 import { CHANNEL_CONFIGS } from '../../constants/index.js';
+import { getIcon, type IconName } from '../icons.js';
 
 /**
  * Format channel speed for display
@@ -25,8 +26,9 @@ function createCard(config: ChannelConfig, isActive: boolean, onClick: () => voi
   card.className = `signal-channel-card${isActive ? ' signal-channel-card--active' : ''}`;
   card.dataset.channel = config.id;
 
+  const iconHtml = getIcon(config.icon as IconName);
   card.innerHTML = `
-    <div class="signal-channel-card__icon">${config.icon}</div>
+    <div class="signal-channel-card__icon">${iconHtml}</div>
     <div class="signal-channel-card__name">${config.name}</div>
     <div class="signal-channel-card__speed">${formatSpeed(config)}</div>
   `;
