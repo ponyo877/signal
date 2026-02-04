@@ -165,9 +165,44 @@ export class VideoAnalyzer {
   drawToCanvas(targetCanvas: HTMLCanvasElement): void {
     const video = this.camera.getVideoElement();
     const ctx = targetCanvas.getContext('2d');
-    if (ctx) {
-      ctx.drawImage(video, 0, 0, targetCanvas.width, targetCanvas.height);
+    if (!ctx) return;
+
+    // DPRを考慮した論理サイズを取得
+    const dpr = window.devicePixelRatio || 1;
+    const canvasWidth = targetCanvas.width / dpr;
+    const canvasHeight = targetCanvas.height / dpr;
+
+    // ビデオのアスペクト比
+    const videoWidth = video.videoWidth || 640;
+    const videoHeight = video.videoHeight || 480;
+    const videoAspect = videoWidth / videoHeight;
+    const canvasAspect = canvasWidth / canvasHeight;
+
+    let drawWidth: number;
+    let drawHeight: number;
+    let offsetX: number;
+    let offsetY: number;
+
+    if (videoAspect > canvasAspect) {
+      // ビデオが横長 → 幅に合わせて、上下に余白（letterbox）
+      drawWidth = canvasWidth;
+      drawHeight = canvasWidth / videoAspect;
+      offsetX = 0;
+      offsetY = (canvasHeight - drawHeight) / 2;
+    } else {
+      // ビデオが縦長 → 高さに合わせて、左右に余白（pillarbox）
+      drawHeight = canvasHeight;
+      drawWidth = canvasHeight * videoAspect;
+      offsetX = (canvasWidth - drawWidth) / 2;
+      offsetY = 0;
     }
+
+    // 背景をクリア
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    // アスペクト比を保持して描画
+    ctx.drawImage(video, offsetX, offsetY, drawWidth, drawHeight);
   }
 }
 
