@@ -125,8 +125,9 @@ export class SignalOverlay {
    * @param moduleCount Size of QR code
    */
   drawQR(modules: boolean[][], moduleCount: number): void {
-    const width = this.canvas.width;
-    const height = this.canvas.height;
+    const dpr = window.devicePixelRatio || 1;
+    const width = this.canvas.width / dpr;
+    const height = this.canvas.height / dpr;
     const minDim = Math.min(width, height);
     const qrSize = minDim * QR_SIZE_RATIO;
     const moduleSize = qrSize / moduleCount;
