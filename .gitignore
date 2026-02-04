@@ -26,3 +26,5 @@ coverage/
 # Environment
 .env
 .env.local
+
+hints/
