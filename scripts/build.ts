@@ -115,7 +115,7 @@ async function build(): Promise<void> {
   // Fetch external libraries
   console.log('Fetching external libraries...');
   const [jsQRLib, qrcodeLib] = await Promise.all([
-    fetchLibrary('https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js'),
+    fetchLibrary('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js'),
     fetchLibrary('https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'),
   ]);
 
