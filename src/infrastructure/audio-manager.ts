@@ -12,6 +12,32 @@ import { FFT_SMOOTHING, MIN_POWER_DIFFERENCE_DB } from '../constants/index.js';
 import { PermissionDeniedError, DeviceNotFoundError, APINotSupportedError } from '../types/index.js';
 
 /**
+ * Shared AudioContext singleton
+ *
+ * iOS Safari requires AudioContext creation/resume within user gesture context.
+ * warmUpAudioContext() must be called synchronously in click handlers (before any await).
+ */
+let sharedAudioContext: AudioContext | null = null;
+
+/** Call synchronously at the top of user gesture handlers (before any await) */
+export function warmUpAudioContext(): void {
+  if (!sharedAudioContext || sharedAudioContext.state === 'closed') {
+    sharedAudioContext = new AudioContext();
+  }
+  if (sharedAudioContext.state === 'suspended') {
+    sharedAudioContext.resume();
+  }
+}
+
+/** Get the shared AudioContext (creates one if needed) */
+export function getSharedAudioContext(): AudioContext {
+  if (!sharedAudioContext || sharedAudioContext.state === 'closed') {
+    sharedAudioContext = new AudioContext();
+  }
+  return sharedAudioContext;
+}
+
+/**
  * Audio Transmitter
  *
  * Generates FSK tones for transmission using OscillatorNode.
@@ -32,11 +58,12 @@ export class AudioTransmitter {
   async transmit(bits: number[]): Promise<void> {
     this.isCancelled = false;
 
-    // Create AudioContext (must be in user gesture handler)
-    this.context = new AudioContext();
+    // Use shared AudioContext (warmed up in user gesture handler)
+    this.context = getSharedAudioContext();
     if (this.context.state === 'suspended') {
       await this.context.resume();
     }
+    console.log(`[audio] transmit: AudioContext state=${this.context.state}, sampleRate=${this.context.sampleRate}`);
     this.gainNode = this.context.createGain();
     this.gainNode.connect(this.context.destination);
     this.gainNode.gain.setValueAtTime(0, this.context.currentTime);
@@ -66,8 +93,8 @@ export class AudioTransmitter {
     const remainingMs = (currentTime - this.context.currentTime) * 1000 + 100;
     await this.sleep(remainingMs);
 
-    // Close AudioContext
-    await this.close();
+    // Cleanup nodes (don't close shared AudioContext)
+    this.cleanup();
   }
 
   /**
@@ -75,7 +102,7 @@ export class AudioTransmitter {
    */
   cancel(): void {
     this.isCancelled = true;
-    this.close();
+    this.cleanup();
   }
 
   /**
@@ -115,14 +142,14 @@ export class AudioTransmitter {
   }
 
   /**
-   * Close AudioContext
+   * Cleanup nodes (don't close shared AudioContext)
    */
-  private async close(): Promise<void> {
-    if (this.context && this.context.state !== 'closed') {
-      await this.context.close();
-      this.context = null;
+  private cleanup(): void {
+    if (this.gainNode) {
+      this.gainNode.disconnect();
       this.gainNode = null;
     }
+    this.context = null;
   }
 
   /**
@@ -168,11 +195,12 @@ export class AudioReceiver {
         },
       });
 
-      // Create AudioContext
-      this.context = new AudioContext();
+      // Use shared AudioContext (warmed up in user gesture handler)
+      this.context = getSharedAudioContext();
       if (this.context.state === 'suspended') {
         await this.context.resume();
       }
+      console.log(`[audio] receive: AudioContext state=${this.context.state}, sampleRate=${this.context.sampleRate}`);
 
       // Connect microphone to analyser
       const source = this.context.createMediaStreamSource(this.stream);
@@ -209,12 +237,11 @@ export class AudioReceiver {
       this.stream = null;
     }
 
-    // Close AudioContext
-    if (this.context && this.context.state !== 'closed') {
-      await this.context.close();
-      this.context = null;
+    // Disconnect nodes (don't close shared AudioContext)
+    if (this.analyser) {
+      this.analyser.disconnect();
     }
-
+    this.context = null;
     this.analyser = null;
     this.frequencyData = null;
   }

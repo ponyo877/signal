@@ -8,6 +8,7 @@ import type { AppState, ChannelId } from '../types/index.js';
 import { SignalError } from '../types/index.js';
 import { Store } from '../application/store.js';
 import { MessageService } from '../application/message-service.js';
+import { warmUpAudioContext } from '../infrastructure/audio-manager.js';
 import { injectStyles } from './styles.js';
 import { logger } from '../utils/index.js';
 import {
@@ -137,6 +138,7 @@ export class AppRenderer {
    * Handle send button
    */
   private async handleSend(message: string): Promise<void> {
+    warmUpAudioContext(); // Must be synchronous, within user gesture context
     try {
       await this.messageService.send(message);
     } catch (error) {
@@ -150,6 +152,7 @@ export class AppRenderer {
    * Handle receive toggle
    */
   private async handleToggleReceive(): Promise<void> {
+    warmUpAudioContext(); // Must be synchronous, within user gesture context
     try {
       await this.messageService.toggleReceive();
     } catch (error) {
