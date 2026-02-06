@@ -119,6 +119,7 @@ export class ColorChannel extends VisualChannelBase {
   private lastBitTime = 0;
 
   private readonly colorVisualizer: ColorVisualizer;
+  private debugFrameCount = 0;
 
   constructor() {
     super();
@@ -235,6 +236,16 @@ export class ColorChannel extends VisualChannelBase {
 
     this.colorVisualizer.setRGB(rgb);
 
+    // Diagnostic logging for iOS debugging
+    this.debugFrameCount++;
+    if (this.debugFrameCount % 60 === 1 || this.state !== 'idle') {
+      const isPilot = detectBluePilot(rgb);
+      console.log(
+        `[color] state=${this.state} r=${rgb.r.toFixed(1)} g=${rgb.g.toFixed(1)} b=${rgb.b.toFixed(1)} ` +
+        `isPilot=${isPilot}`
+      );
+    }
+
     const now = performance.now();
 
     switch (this.state) {
@@ -289,10 +300,17 @@ export class ColorChannel extends VisualChannelBase {
       this.bits.push(bit);
       this.lastBitTime = now;
 
-      // Update progress
+      // Update progress with partial decode
       const minBits = 24 + 8;
       const progress = Math.min(1, this.bits.length / minBits);
-      this.notifyStatus({ state: 'receiving', progress });
+      let partialText: string | undefined;
+      if (this.bits.length >= 32) {
+        const partial = Protocol.decodePartial(this.bits);
+        if (partial?.text) {
+          partialText = partial.text;
+        }
+      }
+      this.notifyStatus({ state: 'receiving', progress, partialText });
 
       // Try to decode
       if (this.bits.length >= 24) {

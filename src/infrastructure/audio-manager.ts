@@ -34,6 +34,9 @@ export class AudioTransmitter {
 
     // Create AudioContext (must be in user gesture handler)
     this.context = new AudioContext();
+    if (this.context.state === 'suspended') {
+      await this.context.resume();
+    }
     this.gainNode = this.context.createGain();
     this.gainNode.connect(this.context.destination);
     this.gainNode.gain.setValueAtTime(0, this.context.currentTime);
@@ -167,6 +170,9 @@ export class AudioReceiver {
 
       // Create AudioContext
       this.context = new AudioContext();
+      if (this.context.state === 'suspended') {
+        await this.context.resume();
+      }
 
       // Connect microphone to analyser
       const source = this.context.createMediaStreamSource(this.stream);
@@ -337,5 +343,12 @@ export class AudioReceiver {
   binToFrequency(binIndex: number): number {
     if (!this.context) return 0;
     return (binIndex * this.context.sampleRate) / this.config.fftSize;
+  }
+
+  /**
+   * Get the actual sample rate of the AudioContext
+   */
+  getSampleRate(): number {
+    return this.context?.sampleRate ?? 44100;
   }
 }

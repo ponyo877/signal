@@ -109,8 +109,12 @@ export class SignalPanel {
 
       case 'receiving':
         this.indicator.classList.add('signal-panel__indicator--receiving');
-        const progress = Math.round(status.progress * 100);
-        this.statusText.textContent = `受信中... ${progress}%`;
+        if (status.partialText) {
+          this.statusText.textContent = `受信中: ${status.partialText}`;
+        } else {
+          const progress = Math.round(status.progress * 100);
+          this.statusText.textContent = `受信中... ${progress}%`;
+        }
         break;
 
       case 'success':

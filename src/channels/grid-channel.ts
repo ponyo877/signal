@@ -129,6 +129,7 @@ export class GridChannel extends VisualChannelBase {
   private lastFrameTime = 0;
 
   private readonly gridVisualizer: GridVisualizer;
+  private debugFrameCount = 0;
 
   constructor() {
     super();
@@ -251,6 +252,15 @@ export class GridChannel extends VisualChannelBase {
 
     this.gridVisualizer.setBits(bits);
 
+    // Diagnostic logging for iOS debugging
+    this.debugFrameCount++;
+    if (this.debugFrameCount % 60 === 1 || this.state !== 'idle') {
+      const isAllWhite = this.gridAnalyzer.isAllWhite(imageData);
+      console.log(
+        `[grid] state=${this.state} isAllWhite=${isAllWhite} bits=[${bits.join('')}]`
+      );
+    }
+
     const now = performance.now();
 
     switch (this.state) {
@@ -312,9 +322,14 @@ export class GridChannel extends VisualChannelBase {
       this.frames.push(frame);
       this.lastFrameTime = now;
 
-      // Update progress (estimate based on typical message size)
+      // Update progress with partial decode
       const progress = Math.min(1, this.frames.length / 10);
-      this.notifyStatus({ state: 'receiving', progress });
+      let partialText: string | undefined;
+      const partial = GridProtocol.decodePartial(this.frames);
+      if (partial?.text) {
+        partialText = partial.text;
+      }
+      this.notifyStatus({ state: 'receiving', progress, partialText });
 
       // Safety limit
       if (this.frames.length > 200) {

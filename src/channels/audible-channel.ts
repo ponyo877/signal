@@ -48,7 +48,7 @@ class AudibleVisualizer implements IVisualizer {
     if (spectrum) {
       this.spectrumVisualizer.draw(
         spectrum,
-        44100, // Assume standard sample rate
+        this.receiver.getSampleRate(),
         AUDIBLE_CONFIG.fftSize,
         0,
         3000

@@ -52,7 +52,7 @@ export type ReceiverStatus =
   | { state: 'idle' }
   | { state: 'pilot' }
   | { state: 'gap' }
-  | { state: 'receiving'; progress: number }
+  | { state: 'receiving'; progress: number; partialText?: string }
   | { state: 'success' }
   | { state: 'error'; message: string };
 

@@ -11,6 +11,9 @@ import type { ReceiverState, ReceiverCallbacks, ReceiverStatus } from '../types/
 import { GAP_MS, GAP_THRESHOLD_MULTIPLIER, MAX_BITS_TIMEOUT } from '../constants/index.js';
 import { Protocol } from './protocol.js';
 
+/** Minimum bits before attempting partial decode (preamble + marker + length + 1 byte) */
+const PARTIAL_DECODE_MIN_BITS = 32;
+
 /** Bit detector function type */
 export type DetectPilotFn = () => boolean;
 export type DetectBitFn = () => 0 | 1 | null;
@@ -187,10 +190,17 @@ export class BitReceiver {
         this.bits.push(bit);
         this.lastBitTime = now;
 
-        // Update progress (estimate based on minimum expected bits)
+        // Update progress with partial decode
         const minBits = 24 + 8; // preamble + marker + at least 1 byte + checksum
         const progress = Math.min(1, this.bits.length / minBits);
-        this.notifyStatus({ state: 'receiving', progress });
+        let partialText: string | undefined;
+        if (this.bits.length >= PARTIAL_DECODE_MIN_BITS) {
+          const partial = Protocol.decodePartial(this.bits);
+          if (partial && partial.text) {
+            partialText = partial.text;
+          }
+        }
+        this.notifyStatus({ state: 'receiving', progress, partialText });
 
         // Try to decode after we have enough bits for the header
         if (this.bits.length >= 24) {

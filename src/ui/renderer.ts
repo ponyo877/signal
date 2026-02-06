@@ -5,6 +5,7 @@
  */
 
 import type { AppState, ChannelId } from '../types/index.js';
+import { SignalError } from '../types/index.js';
 import { Store } from '../application/store.js';
 import { MessageService } from '../application/message-service.js';
 import { injectStyles } from './styles.js';
@@ -140,6 +141,8 @@ export class AppRenderer {
       await this.messageService.send(message);
     } catch (error) {
       logger.error('Failed to send message:', error);
+      const msg = error instanceof SignalError ? error.userMessage : '送信に失敗しました';
+      this.store.addSystemMessage(msg);
     }
   }
 
@@ -151,6 +154,8 @@ export class AppRenderer {
       await this.messageService.toggleReceive();
     } catch (error) {
       logger.error('Failed to toggle receive:', error);
+      const msg = error instanceof SignalError ? error.userMessage : '受信の開始に失敗しました';
+      this.store.addSystemMessage(msg);
     }
   }
 

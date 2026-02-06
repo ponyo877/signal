@@ -236,4 +236,4 @@ export const CALIBRATION_INTERVAL_MS = 16;
 export const QR_ERROR_CORRECTION = 'M';
 
 /** QR display size ratio */
-export const QR_SIZE_RATIO = 0.85;
+export const QR_SIZE_RATIO = 0.60;

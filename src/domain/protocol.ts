@@ -109,6 +109,57 @@ export class Protocol {
   }
 
   /**
+   * Partially decode bits received so far (without requiring checksum).
+   * Returns decoded text and expected total length, or null if header not yet received.
+   */
+  static decodePartial(bits: number[]): { text: string; expectedLength: number } | null {
+    const markerIndex = this.findStartMarker(bits);
+    if (markerIndex === -1) {
+      return null;
+    }
+
+    const dataStart = markerIndex + 8;
+
+    // Need at least 8 bits after marker for length
+    const lengthBits = bits.slice(dataStart, dataStart + 8);
+    if (lengthBits.length < 8) {
+      return null;
+    }
+    const dataLength = this.bitsToNumber(lengthBits);
+
+    if (dataLength > MAX_MESSAGE_BYTES || dataLength === 0) {
+      return null;
+    }
+
+    // Extract as many complete bytes as available
+    const dataBytes: number[] = [];
+    let bitIndex = dataStart + 8;
+
+    for (let i = 0; i < dataLength; i++) {
+      const byteBits = bits.slice(bitIndex, bitIndex + 8);
+      if (byteBits.length < 8) {
+        break; // Incomplete byte, stop here
+      }
+      dataBytes.push(this.bitsToNumber(byteBits));
+      bitIndex += 8;
+    }
+
+    if (dataBytes.length === 0) {
+      return { text: '', expectedLength: dataLength };
+    }
+
+    // Decode UTF-8 (non-fatal: incomplete multi-byte sequences become replacement chars)
+    try {
+      const decoder = new TextDecoder('utf-8', { fatal: false });
+      const text = decoder.decode(new Uint8Array(dataBytes));
+      // Strip trailing replacement character from incomplete multi-byte sequence
+      return { text: text.replace(/\uFFFD$/, ''), expectedLength: dataLength };
+    } catch {
+      return { text: '', expectedLength: dataLength };
+    }
+  }
+
+  /**
    * Calculate the minimum number of bits needed to transmit a message
    * @param message The message
    * @returns Number of bits (excluding preamble and marker)
@@ -280,6 +331,44 @@ export class GridProtocol {
       return decoder.decode(new Uint8Array(data));
     } catch {
       return null;
+    }
+  }
+
+  /**
+   * Partially decode frames received so far (without requiring checksum).
+   * Returns decoded text and expected total length, or null if not enough data.
+   */
+  static decodePartial(frames: number[][]): { text: string; expectedLength: number } | null {
+    if (frames.length === 0) {
+      return null;
+    }
+
+    // Flatten frames to bytes
+    const bytes: number[] = [];
+    for (const frame of frames) {
+      bytes.push(frame[0], frame[1]);
+    }
+
+    // Read length
+    const dataLength = bytes[0];
+    if (dataLength === 0 || dataLength > MAX_MESSAGE_BYTES) {
+      return null;
+    }
+
+    // Extract available data bytes (skip length byte, don't require checksum)
+    const availableDataBytes = Math.min(dataLength, bytes.length - 1);
+    if (availableDataBytes <= 0) {
+      return { text: '', expectedLength: dataLength };
+    }
+
+    const data = bytes.slice(1, 1 + availableDataBytes);
+
+    try {
+      const decoder = new TextDecoder('utf-8', { fatal: false });
+      const text = decoder.decode(new Uint8Array(data));
+      return { text: text.replace(/\uFFFD$/, ''), expectedLength: dataLength };
+    } catch {
+      return { text: '', expectedLength: dataLength };
     }
   }
 

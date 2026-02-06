@@ -118,6 +118,7 @@ export class BrightnessChannel extends VisualChannelBase {
   private lastBitTime = 0;
 
   private readonly brightnessVisualizer: BrightnessVisualizer;
+  private debugFrameCount = 0;
 
   constructor() {
     super();
@@ -241,6 +242,17 @@ export class BrightnessChannel extends VisualChannelBase {
 
     this.brightnessVisualizer.setLuminance(luminance);
 
+    // Diagnostic logging for iOS debugging
+    this.debugFrameCount++;
+    if (this.debugFrameCount % 60 === 1 || this.state !== 'idle') {
+      const cal = this.calibration.getValues();
+      console.log(
+        `[brightness] state=${this.state} lum=${luminance.toFixed(1)} ` +
+        `baseline=${cal.baseline.toFixed(1)} pilotTh=${cal.pilotThreshold.toFixed(1)} ` +
+        `brightTh=${cal.brightnessThreshold.toFixed(1)} isPilot=${this.calibration.isPilot(luminance)}`
+      );
+    }
+
     const now = performance.now();
 
     switch (this.state) {
@@ -295,10 +307,17 @@ export class BrightnessChannel extends VisualChannelBase {
       this.bits.push(bit);
       this.lastBitTime = now;
 
-      // Update progress
+      // Update progress with partial decode
       const minBits = 24 + 8;
       const progress = Math.min(1, this.bits.length / minBits);
-      this.notifyStatus({ state: 'receiving', progress });
+      let partialText: string | undefined;
+      if (this.bits.length >= 32) {
+        const partial = Protocol.decodePartial(this.bits);
+        if (partial?.text) {
+          partialText = partial.text;
+        }
+      }
+      this.notifyStatus({ state: 'receiving', progress, partialText });
 
       // Try to decode
       if (this.bits.length >= 24) {

@@ -4,14 +4,13 @@
  * Communication channel using QR codes for burst transmission.
  * Sender displays QR code, receiver scans with camera.
  * - Single QR code contains entire message
- * - ~3 second display time
+ * - Displayed until user cancels
  * - Burst mode (not streaming)
  */
 
 import type { ChannelConfig, IVisualizer } from '../types/index.js';
 import {
   CHANNEL_CONFIGS,
-  QR_DISPLAY_MS,
   QR_ERROR_CORRECTION,
 } from '../constants/index.js';
 import { VisualChannelBase } from './base-channel.js';
@@ -154,14 +153,8 @@ export class QRChannel extends VisualChannelBase {
     // Create overlay
     this.overlay = new SignalOverlay();
 
-    let cancelled = false;
-    this.overlay.show(() => {
-      cancelled = true;
-    });
-
     try {
       // Generate QR code
-      this.overlay.setStatus('QRコード生成中...');
       this.overlay.fillColor('#FFFFFF');
 
       const qr = this.generateQR(message);
@@ -182,12 +175,12 @@ export class QRChannel extends VisualChannelBase {
       this.overlay.drawQR(modules, moduleCount);
       this.overlay.setStatus('QRコードを読み取ってください');
 
-      // Wait for display time
-      await this.sleep(QR_DISPLAY_MS);
-      if (cancelled) return;
-
-      this.overlay.setStatus('送信完了');
-      await this.sleep(500);
+      // Wait until cancel button is pressed
+      await new Promise<void>((resolve) => {
+        this.overlay!.show(() => {
+          resolve();
+        });
+      });
     } finally {
       this._isSending = false;
       if (this.overlay) {
