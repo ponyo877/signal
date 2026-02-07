@@ -54,16 +54,16 @@ export const AUDIBLE_CONFIG: FSKChannelConfig = {
   pilotDurationMs: 700,
   gapDurationMs: 300,
   bitDurationMs: 70,
-  guardIntervalMs: 8,
-  detectionThresholdDb: -40,
-  fftSize: 8192,
+  guardIntervalMs: 30,
+  detectionThresholdDb: -50,
+  fftSize: 2048,
 };
 
 /** FFT smoothing time constant */
-export const FFT_SMOOTHING = 0.3;
+export const FFT_SMOOTHING = 0.1;
 
 /** Minimum power difference for bit detection (dB) */
-export const MIN_POWER_DIFFERENCE_DB = 3;
+export const MIN_POWER_DIFFERENCE_DB = 1;
 
 // ============================================================
 // Visual Channel Constants

@@ -18,6 +18,9 @@ const PARTIAL_DECODE_MIN_BITS = 32;
 export type DetectPilotFn = () => boolean;
 export type DetectBitFn = () => 0 | 1 | null;
 
+/** Force bit detect function type (no threshold, always returns a value) */
+export type ForceDetectBitFn = () => 0 | 1;
+
 /** BitReceiver configuration */
 export interface BitReceiverConfig {
   bitMs: number;
@@ -25,6 +28,7 @@ export interface BitReceiverConfig {
   gapMs?: number;
   detectPilot: DetectPilotFn;
   detectBit: DetectBitFn;
+  forceDetectBit: ForceDetectBitFn;
   callbacks: ReceiverCallbacks;
 }
 
@@ -184,33 +188,48 @@ export class BitReceiver {
     const elapsed = now - this.lastBitTime;
 
     if (elapsed >= this.bitInterval) {
+      // Always advance timing to stay in sync with sender
+      this.lastBitTime = now;
+
       const bit = this.config.detectBit();
+      let forced = false;
 
       if (bit !== null) {
         this.bits.push(bit);
-        this.lastBitTime = now;
+      } else {
+        // Signal unclear — force a best-guess bit to maintain frame alignment
+        const forcedBit = this.config.forceDetectBit();
+        this.bits.push(forcedBit);
+        forced = true;
+      }
 
-        // Update progress with partial decode
-        const minBits = 24 + 8; // preamble + marker + at least 1 byte + checksum
-        const progress = Math.min(1, this.bits.length / minBits);
-        let partialText: string | undefined;
-        if (this.bits.length >= PARTIAL_DECODE_MIN_BITS) {
-          const partial = Protocol.decodePartial(this.bits);
-          if (partial && partial.text) {
+      console.log(
+        `[bits] #${this.bits.length} bit=${bit ?? this.bits[this.bits.length - 1]} forced=${forced} elapsed=${elapsed.toFixed(0)}ms`
+      );
+
+      // Update progress with partial decode
+      let totalExpected = 64; // default estimate
+      let partialText: string | undefined;
+      if (this.bits.length >= PARTIAL_DECODE_MIN_BITS) {
+        const partial = Protocol.decodePartial(this.bits);
+        if (partial) {
+          totalExpected = 8 + 8 + 8 + partial.expectedLength * 8 + 8;
+          if (partial.text.length > 0) {
             partialText = partial.text;
           }
         }
-        this.notifyStatus({ state: 'receiving', progress, partialText });
+      }
+      const progress = Math.min(1, this.bits.length / totalExpected);
+      this.notifyStatus({ state: 'receiving', progress, partialText });
 
-        // Try to decode after we have enough bits for the header
-        if (this.bits.length >= 24) {
-          this.tryDecode();
-        }
+      // Try to decode after we have enough bits for the header
+      if (this.bits.length >= 24) {
+        this.tryDecode();
+      }
 
-        // Timeout check
-        if (this.bits.length > MAX_BITS_TIMEOUT) {
-          this.handleTimeout();
-        }
+      // Timeout check
+      if (this.bits.length > MAX_BITS_TIMEOUT) {
+        this.handleTimeout();
       }
     }
   }

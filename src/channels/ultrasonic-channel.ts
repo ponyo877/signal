@@ -130,6 +130,7 @@ export class UltrasonicChannel extends AudioChannelBase {
       gapMs: ULTRASONIC_CONFIG.gapDurationMs,
       detectPilot: () => this.receiver?.detectPilot() ?? false,
       detectBit: () => this.receiver?.detectBit() ?? null,
+      forceDetectBit: () => this.receiver?.forceDetectBit() ?? 0,
       callbacks: {
         onMessage: (message) => this.notifyMessage(message),
         onError: (error) => this.notifyError(error),

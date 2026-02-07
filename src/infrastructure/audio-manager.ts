@@ -283,6 +283,15 @@ export class AudioReceiver {
   }
 
   /**
+   * Force detect bit (no threshold checks, always returns best guess)
+   */
+  forceDetectBit(): 0 | 1 {
+    const power0 = this.getPowerAtFrequency(this.config.freq0);
+    const power1 = this.getPowerAtFrequency(this.config.freq1);
+    return power1 > power0 ? 1 : 0;
+  }
+
+  /**
    * Get power at a specific frequency
    * @param frequency Target frequency in Hz
    * @param spreadBins Number of adjacent bins to check (for frequency drift tolerance)
